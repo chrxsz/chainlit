@@ -2,9 +2,12 @@ import os
 import sys
 import chainlit as cl
 import shutil
+import base64
+import asyncio
 from pathlib import Path
 from dotenv import load_dotenv
 from time import sleep
+from datetime import datetime
 
 from langchain_google_genai import ChatGoogleGenerativeAI
 
@@ -50,6 +53,24 @@ def wait_for_download_completion(download_path, timeout=30):
         sleep(1)
     return None
 
+def save_browser_screenshot(browser, output_dir="/Users/christian/Documents/Documents/UFG/Oficina Conectada/Chainlit"):
+    """Captura e salva um print da tela atual do navegador."""
+    async def inner():
+        async with await browser.new_context() as context:
+            screenshot_b64 = await context.take_screenshot(full_page=True)
+            image_data = base64.b64decode(screenshot_b64)
+
+            os.makedirs(output_dir, exist_ok=True)
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            output_path = os.path.join(output_dir, f"screenshot_{timestamp}.png")
+
+            with open(output_path, "wb") as f:
+                f.write(image_data)
+
+            print(f"📸 Screenshot salvo em: {output_path}")
+    
+    asyncio.run(inner())
+
 @cl.step(type="tool")
 async def ford_agent(user_request: str):
     task = f"""
@@ -60,12 +81,16 @@ async def ford_agent(user_request: str):
     Você pode utilizar a seguinte URL base: https://www.reparadorford.com.br/motorcraft/informacoes-tecnicas/model/year/system
     As palavras `model`, `year` e `system` são variáveis que devem ser substituídas por termos correspondentes às listas {models}, {years} e {systems}, respectivamente. Analise o pedido do usuário e escolha os termos mais apropriados para cada variável. 
     Caso mais de um termo se aplique bem ao contexto, você pode usar múltiplos valores separados por dois-pontos, como neste exemplo: `modelo1:modelo2:modelo3`
-    Após definir a URL, acesse o site e clique em leia mais. Aguarde o carregamento da página e clique em baixar para baixar o arquivo que mais se relaciona com o problema do usuário. Aguarde o download ser concluído. Você pode rolar a página, clicar em "carregar mais arquivos" e navegar livremente para encontrar o melhor resultado.
+    Após definir a URL, acesse o site e clique em leia mais no arquivo que mais se relaciona com o problema do usuário. Você pode rolar a página, clicar em "carregar mais arquivos" e navegar livremente para encontrar o melhor resultado.
+    Aguarde o carregamento da página e clique em baixar para baixar o arquivo, se necessário faça login com as credenciais fornecidas nas observações. 
+    Após o download ser concluído, tire um print dessa tela.
 
     # Maneira 2 - Busca por expressão:
     Utilize a seguinte URL base: https://www.reparadorford.com.br/motorcraft/informacoes-tecnicas?busca=expressao
     Substitua a palavra `expressao` por uma frase ou palavra-chave que resuma da melhor forma o pedido do usuário. 
-    Após definir a URL, realize a busca, clique em leia mais. Aguarde o carregamento da página e clique em baixar para baixar o arquivo mais relevante e espere o download ser concluído, considerando sempre o modelo, ano e problema descrito pelo usuário. Você também pode rolar a página e carregar mais arquivos, se necessário.
+    Após definir a URL, realize a busca, clique em 'leia mais' no arquivo mais relevante, considerando sempre o modelo, ano e problema descrito pelo usuário. Você também pode rolar a página e carregar mais arquivos, se necessário.
+    Aguarde o carregamento da página e clique em 'baixar' para baixar o arquivo e espere o download ser concluído, se necessário faça login com as credenciais fornecidas nas observações.
+    Após o download ser concluído, tire um print dessa tela.
 
     ## Observações importantes:
     - Sempre analise o pedido do usuário com atenção para evitar alucinações;
@@ -91,6 +116,9 @@ async def ford_agent(user_request: str):
 
     # Aguarda o término do download
     latest_file = wait_for_download_completion(DOWNLOAD_PATH)
+
+    # ✅ Tira print da tela após o download
+    save_browser_screenshot(browser)
 
     if latest_file is None:
         return "❌ O download do arquivo falhou ou demorou demais."
