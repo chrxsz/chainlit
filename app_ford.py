@@ -9,7 +9,7 @@ from time import sleep
 from langchain_google_genai import ChatGoogleGenerativeAI
 
 # Ajuste o caminho do browser_use conforme sua máquina
-sys.path.append("C:/Users/elisb/Documents/reparador/browser-use")
+sys.path.append("/Users/christian/Documents/GitHub/browser-use")
 
 from browser_use import Agent
 from browser_use.browser.browser import Browser, BrowserConfig

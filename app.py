@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 from langchain_openai import ChatOpenAI
 
 # Ajuste o caminho do browser_use conforme sua máquina
-sys.path.append("C:/Users/igorg/OneDrive/Documentos/browser_use")
+sys.path.append("/Users/christian/Documents/GitHub/browser-use")
 
 from browser_use import Agent
 from browser_use.browser.browser import Browser, BrowserConfig
