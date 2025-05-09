@@ -19,7 +19,7 @@ from browser_use.browser.context import BrowserContextConfig
 load_dotenv()
 
 # Caminho de destino para os downloads
-DOWNLOAD_PATH = Path("C:/Users/elisb/Documents/chainlit")
+DOWNLOAD_PATH = Path("/Users/christian/Documents/Documents/UFG/Oficina Conectada/Chainlit")
 
 # Inicializa LLM
 llm = ChatGoogleGenerativeAI(
